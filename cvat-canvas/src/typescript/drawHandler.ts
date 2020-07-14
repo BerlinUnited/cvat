@@ -69,10 +69,10 @@ export class DrawHandlerImpl implements DrawHandler {
         let [xtl, ytl, xbr, ybr] = [bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height]
             .map((coord: number): number => coord - offset);
 
-        xtl = Math.min(Math.max(xtl, 0), frameWidth);
-        xbr = Math.min(Math.max(xbr, 0), frameWidth);
-        ytl = Math.min(Math.max(ytl, 0), frameHeight);
-        ybr = Math.min(Math.max(ybr, 0), frameHeight);
+        //xtl = Math.min(Math.max(xtl, 0), frameWidth);
+        //xbr = Math.min(Math.max(xbr, 0), frameWidth);
+        //ytl = Math.min(Math.max(ytl, 0), frameHeight);
+        //ybr = Math.min(Math.max(ybr, 0), frameHeight);
 
         return [xtl, ytl, xbr, ybr];
     }
