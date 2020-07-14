@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 ARG http_proxy
 ARG https_proxy
@@ -23,8 +23,7 @@ ENV DJANGO_CONFIGURATION=${DJANGO_CONFIGURATION}
 RUN apt-get update && \
     apt-get --no-install-recommends install -yq \
         software-properties-common && \
-    add-apt-repository ppa:mc3man/xerus-media -y && \
-    add-apt-repository ppa:mc3man/gstffmpeg-keep -y && \
+    add-apt-repository ppa:mc3man/bionic-media -y && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -yq \
         apache2 \
@@ -34,7 +33,6 @@ RUN apt-get update && \
         libapache2-mod-xsendfile \
         supervisor \
         ffmpeg \
-        gstreamer0.10-ffmpeg \
         libavcodec-dev \
         libavdevice-dev \
         libavfilter-dev \
