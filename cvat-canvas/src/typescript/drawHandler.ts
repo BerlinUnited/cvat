@@ -69,6 +69,8 @@ export class DrawHandlerImpl implements DrawHandler {
         let [xtl, ytl, xbr, ybr] = [bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height]
             .map((coord: number): number => coord - offset);
 
+        console.log("getFinalRectCoordinates");
+        console.log(xtl);
         //xtl = Math.min(Math.max(xtl, 0), frameWidth);
         //xbr = Math.min(Math.max(xbr, 0), frameWidth);
         //ytl = Math.min(Math.max(ytl, 0), frameHeight);
@@ -264,6 +266,8 @@ export class DrawHandlerImpl implements DrawHandler {
         this.drawInstance.on('drawstop', (e: Event): void => {
             const bbox = (e.target as SVGRectElement).getBBox();
             const [xtl, ytl, xbr, ybr] = this.getFinalRectCoordinates(bbox);
+            console.log("drawBox");
+            console.log(xtl);
             const { shapeType, redraw: clientID } = this.drawData;
             this.release();
 
