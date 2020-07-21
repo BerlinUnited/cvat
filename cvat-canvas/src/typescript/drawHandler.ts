@@ -437,7 +437,7 @@ export class DrawHandlerImpl implements DrawHandler {
 
         this.drawPolyshape();
         if (this.autobordersEnabled) {
-            this.autoborderHandler.autoborder(true, this.drawInstance, false);
+            this.autoborderHandler.autoborder(true, this.drawInstance, this.drawData.redraw);
         }
     }
 
@@ -450,7 +450,7 @@ export class DrawHandlerImpl implements DrawHandler {
 
         this.drawPolyshape();
         if (this.autobordersEnabled) {
-            this.autoborderHandler.autoborder(true, this.drawInstance, false);
+            this.autoborderHandler.autoborder(true, this.drawInstance, this.drawData.redraw);
         }
     }
 
@@ -482,7 +482,7 @@ export class DrawHandlerImpl implements DrawHandler {
 
             if (this.canceled) return;
             if ((xbr - xtl) * (ybr - ytl) >= consts.AREA_THRESHOLD) {
-                const d = { x: (xbr - xtl) * 0.1, y: (ybr - ytl)*0.1}
+                const d = { x: (xbr - xtl) * 0.1, y: (ybr - ytl) * 0.1 };
                 this.onDrawDone({
                     shapeType,
                     points: cuboidFrom4Points([xtl, ybr, xbr, ybr, xbr, ytl, xbr + d.x, ytl - d.y]),
@@ -771,7 +771,11 @@ export class DrawHandlerImpl implements DrawHandler {
             this.autobordersEnabled = configuration.autoborders;
             if (this.drawInstance) {
                 if (this.autobordersEnabled) {
-                    this.autoborderHandler.autoborder(true, this.drawInstance, false);
+                    this.autoborderHandler.autoborder(
+                        true,
+                        this.drawInstance,
+                        this.drawData.redraw,
+                    );
                 } else {
                     this.autoborderHandler.autoborder(false);
                 }
