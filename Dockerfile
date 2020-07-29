@@ -157,7 +157,7 @@ RUN chown -R ${USER}:${USER} .
 # RUN all commands below as 'django' user
 USER ${USER}
 
-RUN mkdir data share media keys logs /tmp/supervisord
+RUN mkdir data share media keys logs /tmp/supervisord share/benji share/repl
 RUN python3 manage.py collectstatic
 
 EXPOSE 8080 8443
