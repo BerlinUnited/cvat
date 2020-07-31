@@ -15,7 +15,7 @@ server {
 
 server {
     listen 443 ssl;
-    ssl_certificate /ball-full-dh.pem;
+    ssl_certificate /etc/nginx/conf.d/ball-full-dh.pem;
     ssl_certificate_key /etc/nginx/conf.d/ball.key;
 
     # security options
