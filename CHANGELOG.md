@@ -4,7 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0-beta] - Unreleased
+## [1.1.0] - Unreleased
+### Added
+-
+
+### Changed
+-
+
+### Deprecated
+-
+
+### Removed
+-
+
+### Fixed
+-
+
+### Security
+-
+
+## [1.1.0-beta] - 2020-08-03
 ### Added
 - DL models as serverless functions (<https://github.com/opencv/cvat/pull/1767>)
 - Source type support for tags, shapes and tracks (<https://github.com/opencv/cvat/pull/1192>)
@@ -20,11 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - It is impossible to submit a DL model in OpenVINO format using UI. Now you can deploy new models on the server using serverless functions (<https://github.com/opencv/cvat/pull/1767>)
 - Files and folders under share path are now alphabetically sorted
 
-### Deprecated
--
-
 ### Removed
 - Removed OpenVINO and CUDA components because they are not necessary anymore (<https://github.com/opencv/cvat/pull/1767>)
+- Removed the old UI code (<https://github.com/opencv/cvat/pull/1964>)
 
 ### Fixed
 - Some objects aren't shown on canvas sometimes. For example after propagation on of objects is invisible (<https://github.com/opencv/cvat/pull/1834>)
@@ -44,9 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stylelint filetype scans (<https://github.com/opencv/cvat/pull/1952>)
 - Fixed toolip closing issue (<https://github.com/opencv/cvat/pull/1955>)
 - Clearing frame cache when close a task (<https://github.com/opencv/cvat/pull/1966>)
-
-### Security
--
 
 ## [1.1.0-alpha] - 2020-06-30
 ### Added
