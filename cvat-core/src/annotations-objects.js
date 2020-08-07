@@ -125,11 +125,12 @@
 
             checkObjectType('coordinate', x, 'number', null);
             checkObjectType('coordinate', y, 'number', null);
+            fittedPoints.push(x,y);
 
-            fittedPoints.push(
-                Math.clamp(x, 0, maxX),
-                Math.clamp(y, 0, maxY),
-            );
+            //fittedPoints.push(
+            //    Math.clamp(x, 0, maxX),
+            //    Math.clamp(y, 0, maxY),
+            //);
         }
 
         return shapeType === ObjectShape.CUBOID ? points : fittedPoints;
@@ -142,7 +143,7 @@
             inside = inside || (x >= 0 && x <= width && y >= 0 && y <= height);
         }
 
-        return !inside;
+        return false;
     }
 
     function validateAttributeValue(value, attr) {
