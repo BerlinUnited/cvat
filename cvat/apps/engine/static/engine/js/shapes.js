@@ -620,7 +620,9 @@ class BoxModel extends ShapeModel {
     constructor(data, type, clientID, color) {
         super(data, data.shapes || [], type, clientID, color);
         this._positions = BoxModel.importPositions.call(this, data.shapes || data);
+        this._clipToFrame = false;
         this._setupKeyFrames();
+        console.log("blablabla");
     }
 
     _interpolatePosition(frame) {
@@ -679,14 +681,27 @@ class BoxModel extends ShapeModel {
     }
 
     updatePosition(frame, position, silent) {
-        let pos = {
-            xtl: Math.clamp(position.xtl, 0, window.cvat.player.geometry.frameWidth),
-            ytl: Math.clamp(position.ytl, 0, window.cvat.player.geometry.frameHeight),
-            xbr: Math.clamp(position.xbr, 0, window.cvat.player.geometry.frameWidth),
-            ybr: Math.clamp(position.ybr, 0, window.cvat.player.geometry.frameHeight),
-            occluded: position.occluded,
-            z_order: position.z_order,
-        };
+        console.log("blabla");
+        if (this._clipToFrame) {
+            let pos = {
+                xtl: Math.clamp(position.xtl, 0, window.cvat.player.geometry.frameWidth),
+                ytl: Math.clamp(position.ytl, 0, window.cvat.player.geometry.frameHeight),
+                xbr: Math.clamp(position.xbr, 0, window.cvat.player.geometry.frameWidth),
+                ybr: Math.clamp(position.ybr, 0, window.cvat.player.geometry.frameHeight),
+                occluded: position.occluded,
+                z_order: position.z_order,
+            }
+        }else{
+            let pos = {
+                xtl: position.xtl,
+                ytl: position.ytl,
+                xbr: position.xbr,
+                ybr: position.ybr,
+                occluded: position.occluded,
+                z_order: position.z_order,
+            }
+        }
+
 
         if (this._verifyArea(pos)) {
             if (this._type === 'annotation_box') {
