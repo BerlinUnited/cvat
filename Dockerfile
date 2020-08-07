@@ -38,7 +38,6 @@ RUN apt-get update && \
         libavfilter-dev \
         libavformat-dev \
         libavutil-dev \
-        libldap2-dev \
         libswresample-dev \
         libswscale-dev \
         libldap2-dev \
