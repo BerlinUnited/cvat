@@ -137,7 +137,6 @@
     }
 
     function checkOutside(points, width, height) {
-        console.log("blabla");
         let inside = false;
         for (let i = 0; i < points.length - 1; i += 2) {
             const [x, y] = points.slice(i);

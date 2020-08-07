@@ -62,8 +62,8 @@ export class DrawHandlerImpl implements DrawHandler {
     private shapeSizeElement: ShapeSizeElement;
 
     private getFinalRectCoordinates(bbox: BBox): number[] {
-        const frameWidth = this.geometry.image.width;
-        const frameHeight = this.geometry.image.height;
+        //const frameWidth = this.geometry.image.width;
+        //const frameHeight = this.geometry.image.height;
         const { offset } = this.geometry;
 
         let [xtl, ytl, xbr, ybr] = [bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height]
