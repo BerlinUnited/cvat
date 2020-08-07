@@ -97,7 +97,7 @@ spec:
 
   build:
     image: cvat/tf.faster_rcnn_inception_v2_coco
-    baseImage: tensorflow/tensorflow:2.1.1
+    baseImage: my_cool_image:latest
 
     directives:
       preCopy:
