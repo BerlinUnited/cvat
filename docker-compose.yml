@@ -93,6 +93,8 @@ services:
     volumes:
       - ./cvat_proxy/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./cvat_proxy/conf.d/cvat.conf.template:/etc/nginx/conf.d/cvat.conf.template:ro
+      - ./cvat_proxy/conf.d/ball.key:/etc/nginx/conf.d/ball.key:ro
+      - ./cvat_proxy/conf.d/ball-full-dh.pem:/etc/nginx/conf.d/ball-full-dh.pem:ro
     command: /bin/sh -c "envsubst '$$CVAT_HOST' < /etc/nginx/conf.d/cvat.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 
   serverless:
