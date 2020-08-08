@@ -30,6 +30,9 @@ BASE_DIR = str(Path(__file__).parents[2])
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 INTERNAL_IPS = ['127.0.0.1']
 
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 try:
     sys.path.append(BASE_DIR)
     from keys.secret_key import SECRET_KEY # pylint: disable=unused-import
