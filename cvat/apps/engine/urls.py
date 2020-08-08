@@ -23,6 +23,7 @@ schema_view = get_schema_view(
       contact=openapi.Contact(email="nikita.manovich@intel.com"),
       license=openapi.License(name="MIT License"),
    ),
+   url='https://ball.informatik.hu-berlin.de/api/v1/', # important bit
    public=True,
    permission_classes=(permissions.IsAuthenticated,),
 )
