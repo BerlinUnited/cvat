@@ -174,7 +174,7 @@ MIDDLEWARE = [
     'dj_pagination.middleware.PaginationMiddleware',
 ]
 
-UI_URL = 'https://ball.informatik.hu-berlin.de/'
+UI_URL = 'https://ball.informatik.hu-berlin.de'
 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
