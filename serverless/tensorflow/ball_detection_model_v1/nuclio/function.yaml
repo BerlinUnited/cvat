@@ -1,0 +1,40 @@
+metadata:
+  name: naoth_balldetection
+  namespace: cvat
+  annotations:
+    name: Dummy Balldetection
+    type: detector
+    framework: tensorflow
+    spec: |
+      [
+        { "id": 1, "name": "ball" }
+      ]
+
+spec:
+  description: Ball Detection Model
+  runtime: "python:3.6"
+  handler: main:handler
+  eventTimeout: 30s
+
+  build:
+    image: cvat/naoth_balldetection
+    baseImage: python:3.6-slim-buster
+
+    directives:
+      preCopy:
+        - kind: WORKDIR
+          value: /opt/nuclio
+
+  triggers:
+    myHttpTrigger:
+      maxWorkers: 2
+      kind: "http"
+      workerAvailabilityTimeoutMilliseconds: 10000
+      attributes:
+        maxRequestBodySize: 33554432 # 32MB
+
+  platform:
+    attributes:
+      restartPolicy:
+        name: always
+        maximumRetryCount: 3
