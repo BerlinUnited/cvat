@@ -24,6 +24,10 @@ spec:
       preCopy:
         - kind: WORKDIR
           value: /opt/nuclio
+          
+      postCopy:
+        - kind: RUN
+          value: pip install pillow pyyaml
 
   triggers:
     myHttpTrigger:
