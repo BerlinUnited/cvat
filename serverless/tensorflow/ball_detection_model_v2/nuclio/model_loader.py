@@ -6,30 +6,8 @@ tf.disable_v2_behavior()
 
 class ModelLoader:
     def __init__(self, model_path):
-        self.session = None
+        self.model = tf.saved_model.load(model_path)
 
-        detection_graph = tf.Graph()
-        with detection_graph.as_default():
-            od_graph_def = tf.GraphDef()
-            with tf.gfile.GFile(model_path, 'rb') as fid:
-                serialized_graph = fid.read()
-                od_graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(od_graph_def, name='')
-
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
-            self.session = tf.Session(graph=detection_graph, config=config)
-
-            self.image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-            self.boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
-            self.scores = detection_graph.get_tensor_by_name('detection_scores:0')
-            self.classes = detection_graph.get_tensor_by_name('detection_classes:0')
-            self.num_detections = detection_graph.get_tensor_by_name('num_detections:0')
-
-    def __del__(self):
-        if self.session:
-            self.session.close()
-            del self.session
 
     def infer(self, image):
         width, height = image.size
@@ -38,6 +16,24 @@ class ModelLoader:
         image_np = np.array(image.getdata()).reshape((image.height, image.width, 3)).astype(np.uint8)
         image_np = np.expand_dims(image_np, axis=0)
 
-        return self.session.run(
-            [self.boxes, self.scores, self.classes, self.num_detections],
-            feed_dict={self.image_tensor: image_np})
+        input_tensor = tf.convert_to_tensor(image)
+        # The model expects a batch of images, so add an axis with `tf.newaxis`.
+        input_tensor = input_tensor[tf.newaxis,...]
+
+        # Run inference
+        model_fn = model.signatures['serving_default']
+        output_dict = model_fn(input_tensor)
+
+        # All outputs are batches tensors.
+        # Convert to numpy arrays, and take index [0] to remove the batch dimension.
+        # We're only interested in the first num_detections.
+        num_detections = int(output_dict.pop('num_detections'))
+        output_dict = {key:value[0, :num_detections].numpy() 
+                     for key,value in output_dict.items()}
+        output_dict['num_detections'] = num_detections
+
+        # detection_classes should be ints.
+        output_dict['detection_classes'] = output_dict['detection_classes'].astype(np.int64)
+        print("output dict:")
+        print(output_dict)
+        return output_dict
