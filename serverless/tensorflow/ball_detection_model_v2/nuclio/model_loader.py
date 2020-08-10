@@ -15,7 +15,7 @@ class ModelLoader:
         image_np = np.array(image.getdata()).reshape((image.height, image.width, 3)).astype(np.uint8)
         image_np = np.expand_dims(image_np, axis=0)
 
-        input_tensor = tf.convert_to_tensor(image)
+        input_tensor = tf.convert_to_tensor(image_np)
         # The model expects a batch of images, so add an axis with `tf.newaxis`.
         input_tensor = input_tensor[tf.newaxis,...]
 
