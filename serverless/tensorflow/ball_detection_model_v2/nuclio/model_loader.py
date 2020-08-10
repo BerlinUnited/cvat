@@ -6,7 +6,7 @@ tf.disable_v2_behavior()
 
 class ModelLoader:
     def __init__(self, model_path):
-        self.model = tf.saved_model.load(model_path)
+        self.model = tf.saved_model.load(export_dir=model_path, tags=None, options=None)
 
 
     def infer(self, image):
