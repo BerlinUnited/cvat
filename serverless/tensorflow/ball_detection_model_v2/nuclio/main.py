@@ -8,7 +8,7 @@ from model_loader import ModelLoader
 
 def init_context(context):
     context.logger.info("Init context...  0%")
-    model_path = "/opt/nuclio/efficientdet_ball/saved_model/saved_model.pb"
+    model_path = "/opt/nuclio/efficientdet_ball/saved_model/"
     model_handler = ModelLoader(model_path)
     setattr(context.user_data, 'model_handler', model_handler)
     functionconfig = yaml.safe_load(open("/opt/nuclio/function.yaml"))
