@@ -10,7 +10,7 @@ def init_context(context):
     context.logger.info("Init context...  0%")
     
     model_path = "/opt/nuclio/efficientdet_ball/saved_model/"
-    context.logger.info("model_path")
+    context.logger.info(model_path)
     model_handler = ModelLoader(model_path)
     setattr(context.user_data, 'model_handler', model_handler)
     functionconfig = yaml.safe_load(open("/opt/nuclio/function.yaml"))
