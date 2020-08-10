@@ -5,7 +5,7 @@ import tensorflow as tf
 
 class ModelLoader:
     def __init__(self, model_path):
-        self.model = tf.saved_model.load(export_dir=model_path, tags=None, options=None)
+        self.model = tf.saved_model.load(model_path)
 
 
     def infer(self, image):
