@@ -20,7 +20,7 @@ class ModelLoader:
         input_tensor = input_tensor[tf.newaxis,...]
 
         # Run inference
-        model_fn = model.signatures['serving_default']
+        model_fn = self.model.signatures['serving_default']
         output_dict = model_fn(input_tensor)
 
         # All outputs are batches tensors.
