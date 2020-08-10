@@ -1,0 +1,51 @@
+metadata:
+  name: naoth_balldetection_v2
+  namespace: cvat
+  annotations:
+    name: Dummy Balldetection v2
+    type: detector
+    framework: tensorflow
+    spec: |
+      [
+        { "id": 1, "name": "ball" }
+      ]
+
+spec:
+  description: Ball Detection Model
+  runtime: "python:3.6"
+  handler: main:handler
+  eventTimeout: 30s
+
+  build:
+    image: cvat/naoth_balldetection_v2
+    baseImage: my_cool_image:latest
+
+    directives:
+      preCopy:
+        - kind: RUN
+          value: apt install curl
+        - kind: WORKDIR
+          value: /opt/nuclio
+
+      postCopy:
+        - kind: RUN
+          value: curl -O http://141.20.37.93/efficientdet_ball.tar.gz
+        - kind: RUN
+          value: tar -xzf efficientdet_ball.tar.gz && rm efficientdet_ball.tar.gz
+        - kind: RUN
+          value: pip install pillow pyyaml
+
+
+  triggers:
+    myHttpTrigger:
+      maxWorkers: 2
+      kind: "http"
+      workerAvailabilityTimeoutMilliseconds: 10000
+      attributes:
+        maxRequestBodySize: 33554432 # 32MB
+
+  platform:
+    attributes:
+      restartPolicy:
+        name: always
+        maximumRetryCount: 3
