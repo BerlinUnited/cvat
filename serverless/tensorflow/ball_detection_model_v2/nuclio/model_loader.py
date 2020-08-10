@@ -13,7 +13,7 @@ class ModelLoader:
         if width > 1920 or height > 1080:
             image = image.resize((width // 2, height // 2), Image.ANTIALIAS)
         image_np = np.array(image.getdata()).reshape((image.height, image.width, 3)).astype(np.uint8)
-        image_np = np.expand_dims(image_np, axis=0)
+        #image_np = np.expand_dims(image_np, axis=0)
 
         input_tensor = tf.convert_to_tensor(image_np)
         # The model expects a batch of images, so add an axis with `tf.newaxis`.
