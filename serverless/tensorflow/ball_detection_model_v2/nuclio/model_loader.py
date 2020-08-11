@@ -35,4 +35,4 @@ class ModelLoader:
         output_dict['detection_classes'] = output_dict['detection_classes'].astype(np.int64)
         print("output dict:")
         print(output_dict)
-        return detection_boxes['detection_boxes'], detection_boxes['detection_scores'], output_dict['detection_classes'], num_detections
+        return output_dict['detection_boxes'], output_dict['detection_scores'], output_dict['detection_classes'], num_detections
