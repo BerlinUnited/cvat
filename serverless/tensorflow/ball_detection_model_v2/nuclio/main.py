@@ -23,7 +23,7 @@ def handler(context, event):
     context.logger.info("Run efficientdet_ball model")
     data = event.body
     buf = io.BytesIO(base64.b64decode(data["image"].encode('utf-8')))
-    threshold = float(data.get("threshold", 0.5))
+    threshold = float(data.get("threshold", 0.0))
     image = Image.open(buf)
 
     (boxes, scores, classes, num_detections) = context.user_data.model_handler.infer(image)
