@@ -30,14 +30,14 @@ def handler(context, event):
 
     results = []
     for i in range(num_detections):
-        obj_class = int(classes[0][i])
-        obj_score = scores[0][i]
+        obj_class = int(classes[i])
+        obj_score = scores[i]
         obj_label = context.user_data.labels.get(obj_class, "unknown")
         if obj_score >= threshold:
-            xtl = boxes[0][i][1] * image.width
-            ytl = boxes[0][i][0] * image.height
-            xbr = boxes[0][i][3] * image.width
-            ybr = boxes[0][i][2] * image.height
+            xtl = boxes[i][1] * image.width
+            ytl = boxes[i][0] * image.height
+            xbr = boxes[i][3] * image.width
+            ybr = boxes[i][2] * image.height
 
             results.append({
                 "confidence": str(obj_score),
