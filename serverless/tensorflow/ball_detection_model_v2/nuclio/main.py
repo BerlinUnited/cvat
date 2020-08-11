@@ -29,7 +29,7 @@ def handler(context, event):
     (boxes, scores, classes, num_detections) = context.user_data.model_handler.infer(image)
 
     results = []
-    for i in range(int(num_detections[0])):
+    for i in range(num_detections):
         obj_class = int(classes[0][i])
         obj_score = scores[0][i]
         obj_label = context.user_data.labels.get(obj_class, "unknown")
