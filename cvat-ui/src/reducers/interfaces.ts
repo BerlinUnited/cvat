@@ -60,6 +60,7 @@ export interface TasksState {
             [tid: number]: boolean; // deleted (deleting if in dictionary)
         };
         creates: {
+            taskId: number | null;
             status: string;
             error: string;
         };
@@ -240,9 +241,6 @@ export interface NotificationsState {
         };
         userAgreements: {
             fetching: null | ErrorState;
-        };
-        plugins: {
-            initializationError: null | ErrorState;
         };
     };
     messages: {
