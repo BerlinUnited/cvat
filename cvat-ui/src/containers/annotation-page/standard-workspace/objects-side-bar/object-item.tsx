@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react';
+import React, { MutableRefObject } from 'react';
 import copy from 'copy-to-clipboard';
 import { connect } from 'react-redux';
 
@@ -15,7 +15,6 @@ import {
 } from 'reducers/interfaces';
 import {
     collapseObjectItems,
-    changeLabelColorAsync,
     updateAnnotationsAsync,
     changeFrameAsync,
     removeObjectAsync,
@@ -27,10 +26,12 @@ import {
 } from 'actions/annotation-actions';
 
 import ObjectStateItemComponent from 'components/annotation-page/standard-workspace/objects-side-bar/object-item';
+import { ToolsControlComponent } from 'components/annotation-page/standard-workspace/controls-side-bar/tools-control';
 import { shift } from 'utils/math';
 
 interface OwnProps {
     clientID: number;
+    initialCollapsed: boolean;
 }
 
 interface StateToProps {
@@ -43,11 +44,11 @@ interface StateToProps {
     activated: boolean;
     colorBy: ColorBy;
     ready: boolean;
-    colors: string[];
     activeControl: ActiveControl;
     minZLayer: number;
     maxZLayer: number;
     normalizedKeyMap: Record<string, string>;
+    aiToolsRef: MutableRefObject<ToolsControlComponent>;
 }
 
 interface DispatchToProps {
@@ -58,7 +59,6 @@ interface DispatchToProps {
     removeObject: (sessionInstance: any, objectState: any) => void;
     copyShape: (objectState: any) => void;
     propagateObject: (objectState: any) => void;
-    changeLabelColor(label: any, color: string): void;
     changeGroupColor(group: number, color: string): void;
 }
 
@@ -88,7 +88,7 @@ function mapStateToProps(state: CombinedState, own: OwnProps): StateToProps {
                 ready,
                 activeControl,
             },
-            colors,
+            aiToolsRef,
         },
         settings: {
             shapes: {
@@ -100,29 +100,41 @@ function mapStateToProps(state: CombinedState, own: OwnProps): StateToProps {
         },
     } = state;
 
-    const index = states
-        .map((_state: any): number => _state.clientID)
-        .indexOf(own.clientID);
+    const stateIDs = states.map((_state: any): number => _state.clientID);
+    const index = stateIDs.indexOf(own.clientID);
 
-    const collapsedState = typeof (statesCollapsed[own.clientID]) === 'undefined'
-        ? true : statesCollapsed[own.clientID];
+    try {
+        const collapsedState = typeof (statesCollapsed[own.clientID]) === 'undefined'
+            ? own.initialCollapsed : statesCollapsed[own.clientID];
 
-    return {
-        objectState: states[index],
-        collapsed: collapsedState,
-        attributes: jobAttributes[states[index].label.id],
-        labels,
-        ready,
-        activeControl,
-        colorBy,
-        colors,
-        jobInstance,
-        frameNumber,
-        activated: activatedStateID === own.clientID,
-        minZLayer,
-        maxZLayer,
-        normalizedKeyMap,
-    };
+        return {
+            objectState: states[index],
+            collapsed: collapsedState,
+            attributes: jobAttributes[states[index].label.id],
+            labels,
+            ready,
+            activeControl,
+            colorBy,
+            jobInstance,
+            frameNumber,
+            activated: activatedStateID === own.clientID,
+            minZLayer,
+            maxZLayer,
+            normalizedKeyMap,
+            aiToolsRef,
+        };
+    } catch (exception) {
+        // we have an exception here sometimes
+        // but I cannot understand when it happens and what is the root reason
+        // maybe this temporary hack helps us
+        const dataObject = {
+            index,
+            frameNumber,
+            clientID: own.clientID,
+            stateIDs,
+        };
+        throw new Error(`${exception.toString()} in mapStateToProps of ObjectItemContainer. Data are ${JSON.stringify(dataObject)}`);
+    }
 }
 
 function mapDispatchToProps(dispatch: any): DispatchToProps {
@@ -148,12 +160,6 @@ function mapDispatchToProps(dispatch: any): DispatchToProps {
         },
         propagateObject(objectState: any): void {
             dispatch(propagateObjectAction(objectState));
-        },
-        changeLabelColor(
-            label: any,
-            color: string,
-        ): void {
-            dispatch(changeLabelColorAsync(label, color));
         },
         changeGroupColor(group: number, color: string): void {
             dispatch(changeGroupColorAsync(group, color));
@@ -269,11 +275,17 @@ class ObjectItemContainer extends React.PureComponent<Props> {
         collapseOrExpand([objectState], !collapsed);
     };
 
+    private activateTracking = (): void => {
+        const { objectState, aiToolsRef } = this.props;
+        if (aiToolsRef.current && aiToolsRef.current.trackingAvailable()) {
+            aiToolsRef.current.trackState(objectState);
+        }
+    };
+
     private changeColor = (color: string): void => {
         const {
             objectState,
             colorBy,
-            changeLabelColor,
             changeGroupColor,
         } = this.props;
 
@@ -282,8 +294,6 @@ class ObjectItemContainer extends React.PureComponent<Props> {
             this.commit();
         } else if (colorBy === ColorBy.GROUP) {
             changeGroupColor(objectState.group.id, color);
-        } else if (colorBy === ColorBy.LABEL) {
-            changeLabelColor(objectState.label, color);
         }
     };
 
@@ -375,7 +385,6 @@ class ObjectItemContainer extends React.PureComponent<Props> {
             attributes,
             activated,
             colorBy,
-            colors,
             normalizedKeyMap,
         } = this.props;
 
@@ -399,10 +408,10 @@ class ObjectItemContainer extends React.PureComponent<Props> {
                 attrValues={{ ...objectState.attributes }}
                 labelID={objectState.label.id}
                 color={stateColor}
-                colors={colors}
                 attributes={attributes}
                 normalizedKeyMap={normalizedKeyMap}
                 labels={labels}
+                colorBy={colorBy}
                 collapsed={collapsed}
                 activate={this.activate}
                 remove={this.remove}
@@ -416,6 +425,7 @@ class ObjectItemContainer extends React.PureComponent<Props> {
                 changeLabel={this.changeLabel}
                 changeAttribute={this.changeAttribute}
                 collapse={this.collapse}
+                activateTracking={this.activateTracking}
                 resetCuboidPerspective={() => this.resetCuboidPerspective()}
             />
         );

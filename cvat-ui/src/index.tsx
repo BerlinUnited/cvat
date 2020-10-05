@@ -2,39 +2,27 @@
 //
 // SPDX-License-Identifier: MIT
 
+import { getAboutAsync } from 'actions/about-actions';
+import { authorizedAsync, loadAuthActionsAsync } from 'actions/auth-actions';
+import { getFormatsAsync } from 'actions/formats-actions';
+import { getModelsAsync } from 'actions/models-actions';
+import { getPluginsAsync } from 'actions/plugins-actions';
+import { switchSettingsDialog } from 'actions/settings-actions';
+import { shortcutsActions } from 'actions/shortcuts-actions';
+import { getUserAgreementsAsync } from 'actions/useragreements-actions';
+import { getUsersAsync } from 'actions/users-actions';
+import CVATApplication from 'components/cvat-app';
+import LayoutGrid from 'components/layout-grid/layout-grid';
+import logger, { LogType } from 'cvat-logger';
+import createCVATStore, { getCVATStore } from 'cvat-store';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { connect, Provider } from 'react-redux';
 import { ExtendedKeyMapOptions } from 'react-hotkeys';
+import { connect, Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-
-import CVATApplication from 'components/cvat-app';
-
 import createRootReducer from 'reducers/root-reducer';
-import createCVATStore, { getCVATStore } from 'cvat-store';
-import logger, { LogType } from 'cvat-logger';
-
-import {
-    authorizedAsync,
-    loadAuthActionsAsync,
-} from 'actions/auth-actions';
-import { getFormatsAsync } from 'actions/formats-actions';
-import { checkPluginsAsync } from 'actions/plugins-actions';
-import { getUsersAsync } from 'actions/users-actions';
-import { getAboutAsync } from 'actions/about-actions';
-import { getModelsAsync } from 'actions/models-actions';
-import { getUserAgreementsAsync } from 'actions/useragreements-actions';
-import { shortcutsActions } from 'actions/shortcuts-actions';
-import { switchSettingsDialog } from 'actions/settings-actions';
-import {
-    resetErrors,
-    resetMessages,
-} from './actions/notification-actions';
-
-import {
-    CombinedState,
-    NotificationsState,
-} from './reducers/interfaces';
+import { resetErrors, resetMessages } from './actions/notification-actions';
+import { CombinedState, NotificationsState } from './reducers/interfaces';
 
 createCVATStore(createRootReducer);
 const cvatStore = getCVATStore();
@@ -57,9 +45,11 @@ interface StateToProps {
     authActionsFetching: boolean;
     authActionsInitialized: boolean;
     allowChangePassword: boolean;
+    allowResetPassword: boolean;
     notifications: NotificationsState;
     user: any;
     keyMap: Record<string, ExtendedKeyMapOptions>;
+    isModelPluginActive: boolean;
 }
 
 interface DispatchToProps {
@@ -105,9 +95,11 @@ function mapStateToProps(state: CombinedState): StateToProps {
         authActionsFetching: auth.authActionsFetching,
         authActionsInitialized: auth.authActionsInitialized,
         allowChangePassword: auth.allowChangePassword,
+        allowResetPassword: auth.allowResetPassword,
         notifications: state.notifications,
         user: auth.user,
         keyMap: shortcuts.keyMap,
+        isModelPluginActive: plugins.list.MODELS,
     };
 }
 
@@ -116,7 +108,7 @@ function mapDispatchToProps(dispatch: any): DispatchToProps {
         loadFormats: (): void => dispatch(getFormatsAsync()),
         verifyAuthorized: (): void => dispatch(authorizedAsync()),
         loadUserAgreements: (): void => dispatch(getUserAgreementsAsync()),
-        initPlugins: (): void => dispatch(checkPluginsAsync()),
+        initPlugins: (): void => dispatch(getPluginsAsync()),
         initModels: (): void => dispatch(getModelsAsync()),
         loadUsers: (): void => dispatch(getUsersAsync()),
         loadAbout: (): void => dispatch(getAboutAsync()),
@@ -139,25 +131,23 @@ ReactDOM.render(
             <BrowserRouter>
                 <ReduxAppWrapper />
             </BrowserRouter>
+            <LayoutGrid />
         </Provider>
     ),
     document.getElementById('root'),
 );
 
-window.onerror = (
-    message: Event | string,
-    source?: string,
-    lineno?: number,
-    colno?: number,
-    error?: Error,
-) => {
-    if (typeof (message) === 'string' && source && typeof (lineno) === 'number' && (typeof (colno) === 'number') && error) {
+window.addEventListener('error', (errorEvent: ErrorEvent) => {
+    if (errorEvent.filename
+        && typeof (errorEvent.lineno) === 'number'
+        && typeof (errorEvent.colno) === 'number'
+        && errorEvent.error) {
         const logPayload = {
-            filename: source,
-            line: lineno,
-            message: error.message,
-            column: colno,
-            stack: error.stack,
+            filename: errorEvent.filename,
+            line: errorEvent.lineno,
+            message: errorEvent.error.message,
+            column: errorEvent.colno,
+            stack: errorEvent.error.stack,
         };
 
         const store = getCVATStore();
@@ -171,4 +161,4 @@ window.onerror = (
             logger.log(LogType.sendException, logPayload);
         }
     }
-};
+});

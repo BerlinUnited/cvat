@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     'cvat.apps.documentation',
     'cvat.apps.dataset_manager',
     'cvat.apps.engine',
-    'cvat.apps.git',
+    'cvat.apps.dataset_repo',
     'cvat.apps.restrictions',
     'cvat.apps.lambda_manager',
     'django_rq',
@@ -154,7 +154,11 @@ REST_FRAMEWORK = {
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'cvat.apps.restrictions.serializers.RestrictedRegisterSerializer'
+    'REGISTER_SERIALIZER': 'cvat.apps.restrictions.serializers.RestrictedRegisterSerializer',
+}
+
+REST_AUTH_SERIALIZERS = {
+    'PASSWORD_RESET_SERIALIZER': 'cvat.apps.authentication.serializers.PasswordResetSerializerEx',
 }
 
 if os.getenv('DJANGO_LOG_VIEWER_HOST'):
@@ -207,15 +211,17 @@ DJANGO_AUTH_TYPE = 'BASIC'
 DJANGO_AUTH_DEFAULT_GROUPS = []
 LOGIN_URL = 'rest_login'
 LOGIN_REDIRECT_URL = '/'
-AUTH_LOGIN_NOTE = '<p>Have not registered yet? <a href="/auth/register">Register here</a>.</p>'
 
 AUTHENTICATION_BACKENDS = [
     'rules.permissions.ObjectPermissionBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 # https://github.com/pennersr/django-allauth
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+# set UI url to redirect after a successful e-mail confirmation
+ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/auth/login'
 OLD_PASSWORD_FIELD_ENABLED = True
 
 # Django-RQ
@@ -322,6 +328,9 @@ os.makedirs(DATA_ROOT, exist_ok=True)
 MEDIA_DATA_ROOT = os.path.join(DATA_ROOT, 'data')
 os.makedirs(MEDIA_DATA_ROOT, exist_ok=True)
 
+CACHE_ROOT = os.path.join(DATA_ROOT, 'cache')
+os.makedirs(CACHE_ROOT, exist_ok=True)
+
 TASKS_ROOT = os.path.join(DATA_ROOT, 'tasks')
 os.makedirs(TASKS_ROOT, exist_ok=True)
 
@@ -332,7 +341,7 @@ MODELS_ROOT = os.path.join(DATA_ROOT, 'models')
 os.makedirs(MODELS_ROOT, exist_ok=True)
 
 LOGS_ROOT = os.path.join(BASE_DIR, 'logs')
-os.makedirs(MODELS_ROOT, exist_ok=True)
+os.makedirs(LOGS_ROOT, exist_ok=True)
 
 MIGRATIONS_LOGS_ROOT = os.path.join(LOGS_ROOT, 'migrations')
 os.makedirs(MIGRATIONS_LOGS_ROOT, exist_ok=True)
@@ -400,9 +409,6 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = None   # this django check disabled
 LOCAL_LOAD_MAX_FILES_COUNT = 500
 LOCAL_LOAD_MAX_FILES_SIZE = 512 * 1024 * 1024  # 512 MB
 
-DATUMARO_PATH = os.path.join(BASE_DIR, 'datumaro')
-sys.path.append(DATUMARO_PATH)
-
 RESTRICTIONS = {
     'user_agreements': [],
 
@@ -420,3 +426,17 @@ RESTRICTIONS = {
         'engine.role.admin',
         ),
 }
+
+# http://www.grantjenks.com/docs/diskcache/tutorial.html#djangocache
+CACHES = {
+   'default' : {
+       'BACKEND' : 'diskcache.DjangoCache',
+       'LOCATION' : CACHE_ROOT,
+       'TIMEOUT' : None,
+       'OPTIONS' : {
+            'size_limit' : 2 ** 40, # 1 Tb
+       }
+   }
+}
+
+USE_CACHE = True

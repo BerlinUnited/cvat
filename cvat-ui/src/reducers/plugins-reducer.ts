@@ -4,7 +4,6 @@
 
 import { PluginsActionTypes, PluginActions } from 'actions/plugins-actions';
 import { registerGitPlugin } from 'utils/git-utils';
-import { registerDEXTRPlugin } from 'utils/dextr-utils';
 import { PluginsState } from './interfaces';
 
 const defaultState: PluginsState = {
@@ -12,8 +11,8 @@ const defaultState: PluginsState = {
     initialized: false,
     list: {
         GIT_INTEGRATION: false,
-        DEXTR_SEGMENTATION: false,
         ANALYTICS: false,
+        MODELS: false,
     },
 };
 
@@ -22,22 +21,18 @@ export default function (
     action: PluginActions,
 ): PluginsState {
     switch (action.type) {
-        case PluginsActionTypes.CHECK_PLUGINS: {
+        case PluginsActionTypes.GET_PLUGINS: {
             return {
                 ...state,
                 initialized: false,
                 fetching: true,
             };
         }
-        case PluginsActionTypes.CHECKED_ALL_PLUGINS: {
+        case PluginsActionTypes.GET_PLUGINS_SUCCESS: {
             const { list } = action.payload;
 
             if (!state.list.GIT_INTEGRATION && list.GIT_INTEGRATION) {
                 registerGitPlugin();
-            }
-
-            if (!state.list.DEXTR_SEGMENTATION && list.DEXTR_SEGMENTATION) {
-                registerDEXTRPlugin();
             }
 
             return {
@@ -45,6 +40,13 @@ export default function (
                 initialized: true,
                 fetching: false,
                 list,
+            };
+        }
+        case PluginsActionTypes.GET_PLUGINS_FAILED: {
+            return {
+                ...state,
+                initialized: true,
+                fetching: false,
             };
         }
         default:

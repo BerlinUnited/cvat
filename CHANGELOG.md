@@ -4,16 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - Unreleased
+## [1.2.0] - Unreleased
 ### Added
-- Siammask tracker as DL serverless function (<https://github.com/opencv/cvat/pull/1988>)
-- [Datumaro] Added model info and source info commands (<https://github.com/opencv/cvat/pull/1973>)
-- [Datumaro] Dataset statistics (<https://github.com/opencv/cvat/pull/1668>)
-- [Datumaro] Multi-dataset merge (https://github.com/opencv/cvat/pull/1695)
+- Added layout grids toggling ('ctrl + alt + Enter')
+- Added password reset functionality (<https://github.com/opencv/cvat/pull/2058>)
+- Ability to work with data on the fly (https://github.com/opencv/cvat/pull/2007)
+- Annotation in process outline color wheel (<https://github.com/opencv/cvat/pull/2084>)
+- On the fly annotation using DL detectors (<https://github.com/opencv/cvat/pull/2102>)
+- Displaying automatic annotation progress on a task view (<https://github.com/opencv/cvat/pull/2148>)
+- Automatic tracking of bounding boxes using serverless functions (<https://github.com/opencv/cvat/pull/2136>)
+- [Datumaro] CLI command for dataset equality comparison (<https://github.com/opencv/cvat/pull/1989>)
+- [Datumaro] Merging of datasets with different labels (<https://github.com/opencv/cvat/pull/2098>)
+- Add FBRS interactive segmentation serverless function (<https://github.com/openvinotoolkit/cvat/pull/2094>)
+- Ability to change default behaviour of previous/next buttons of a player.
+It supports regular navigation, searching a frame according to annotations
+filters and searching the nearest frame without any annotations (<https://github.com/openvinotoolkit/cvat/pull/2221>)
+- MacOS users notes in CONTRIBUTING.md
+- Ability to prepare meta information manually (<https://github.com/openvinotoolkit/cvat/pull/2217>)
+- Ability to upload prepared meta information along with a video when creating a task (<https://github.com/openvinotoolkit/cvat/pull/2217>)
+- Optional chaining plugin for cvat-canvas and cvat-ui (<https://github.com/openvinotoolkit/cvat/pull/2249>)
 
 ### Changed
-- Shape coordinates are rounded to 2 digits in dumped annotations (<https://github.com/opencv/cvat/pull/1970>)
-- COCO format does not produce polygon points for bbox annotations (<https://github.com/opencv/cvat/pull/1953>)
+- UI models (like DEXTR) were redesigned to be more interactive (<https://github.com/opencv/cvat/pull/2054>)
+- Used Ubuntu:20.04 as a base image for CVAT Dockerfile (<https://github.com/opencv/cvat/pull/2101>)
+- Right colors of label tags in label mapping when a user runs automatic detection (<https://github.com/openvinotoolkit/cvat/pull/2162>)
+- Nuclio became an optional component of CVAT (<https://github.com/openvinotoolkit/cvat/pull/2192>)
+- A key to remove a point from a polyshape [Ctrl => Alt] (<https://github.com/openvinotoolkit/cvat/pull/2204>)
+- Updated `docker-compose` file version from `2.3` to `3.3`(<https://github.com/openvinotoolkit/cvat/pull/2235>)
+- Added auto inference of url schema from host in CLI, if provided (<https://github.com/openvinotoolkit/cvat/pull/2240>)
 
 ### Deprecated
 -
@@ -22,12 +40,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -
 
 ### Fixed
-- Issue loading openvino models for semi-automatic and automatic annotation (<https://github.com/opencv/cvat/pull/1996>)
-- Basic functions of CVAT works without activated nuclio dashboard
-- Fixed error with creating task with labels with the same name (<https://github.com/opencv/cvat/pull/2031>)
+- Fixed multiple errors which arises when polygon is of length 5 or less (<https://github.com/opencv/cvat/pull/2100>)
+- Fixed task creation from PDF (<https://github.com/opencv/cvat/pull/2141>)
+- Fixed CVAT format import for frame stepped tasks (<https://github.com/openvinotoolkit/cvat/pull/2151>)
+- Fixed the reading problem with large PDFs (<https://github.com/openvinotoolkit/cvat/pull/2154>)
+- Fixed unnecessary pyhash dependency (<https://github.com/openvinotoolkit/cvat/pull/2170>)
+- Fixed Data is not getting cleared, even after deleting the Task from Django Admin App(<https://github.com/openvinotoolkit/cvat/issues/1925>)
+- Fixed blinking message: "Some tasks have not been showed because they do not have any data" (<https://github.com/openvinotoolkit/cvat/pull/2200>)
+- Fixed case when a task with 0 jobs is shown as "Completed" in UI (<https://github.com/openvinotoolkit/cvat/pull/2200>)
+- Fixed use case when UI throws exception: Cannot read property 'objectType' of undefined #2053 (<https://github.com/openvinotoolkit/cvat/pull/2203>)
+- Fixed use case when logs could be saved twice or more times #2202 (<https://github.com/openvinotoolkit/cvat/pull/2203>)
+- Fixed issues from #2112 (<https://github.com/openvinotoolkit/cvat/pull/2217>)
+- Git application name (renamed to dataset_repo) (<https://github.com/openvinotoolkit/cvat/pull/2243>)
 
 ### Security
 -
+
+## [1.1.0] - 2020-08-31
+### Added
+- Siammask tracker as DL serverless function (<https://github.com/opencv/cvat/pull/1988>)
+- [Datumaro] Added model info and source info commands (<https://github.com/opencv/cvat/pull/1973>)
+- [Datumaro] Dataset statistics (<https://github.com/opencv/cvat/pull/1668>)
+- Ability to change label color in tasks and predefined labels (<https://github.com/opencv/cvat/pull/2014>)
+- [Datumaro] Multi-dataset merge (https://github.com/opencv/cvat/pull/1695)
+- Ability to configure email verification for new users (<https://github.com/opencv/cvat/pull/1929>)
+- Link to django admin page from UI (<https://github.com/opencv/cvat/pull/2068>)
+- Notification message when users use wrong browser (<https://github.com/opencv/cvat/pull/2070>)
+
+### Changed
+- Shape coordinates are rounded to 2 digits in dumped annotations (<https://github.com/opencv/cvat/pull/1970>)
+- COCO format does not produce polygon points for bbox annotations (<https://github.com/opencv/cvat/pull/1953>)
+
+### Fixed
+- Issue loading openvino models for semi-automatic and automatic annotation (<https://github.com/opencv/cvat/pull/1996>)
+- Basic functions of CVAT works without activated nuclio dashboard
+- Fixed a case in which exported masks could have wrong color order (<https://github.com/opencv/cvat/issues/2032>)
+- Fixed error with creating task with labels with the same name (<https://github.com/opencv/cvat/pull/2031>)
+- Django RQ dashboard view (<https://github.com/opencv/cvat/pull/2069>)
+- Object's details menu settings (<https://github.com/opencv/cvat/pull/2084>)
 
 ## [1.1.0-beta] - 2020-08-03
 ### Added

@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ARG http_proxy
 ARG https_proxy
@@ -23,7 +23,6 @@ ENV DJANGO_CONFIGURATION=${DJANGO_CONFIGURATION}
 RUN apt-get update && \
     apt-get --no-install-recommends install -yq \
         software-properties-common && \
-    add-apt-repository ppa:mc3man/bionic-media -y && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -yq \
         apache2 \
@@ -32,14 +31,13 @@ RUN apt-get update && \
         build-essential \
         libapache2-mod-xsendfile \
         supervisor \
-        ffmpeg \
-        libavcodec-dev \
-        libavdevice-dev \
-        libavfilter-dev \
-        libavformat-dev \
-        libavutil-dev \
-        libswresample-dev \
-        libswscale-dev \
+        libavcodec-dev=7:4.2.4-1ubuntu0.1 \
+        libavdevice-dev=7:4.2.4-1ubuntu0.1 \
+        libavfilter-dev=7:4.2.4-1ubuntu0.1 \
+        libavformat-dev=7:4.2.4-1ubuntu0.1 \
+        libavutil-dev=7:4.2.4-1ubuntu0.1 \
+        libswresample-dev=7:4.2.4-1ubuntu0.1 \
+        libswscale-dev=7:4.2.4-1ubuntu0.1 \
         libldap2-dev \
         libsasl2-dev \
         pkg-config \
@@ -48,16 +46,13 @@ RUN apt-get update && \
         tzdata \
         p7zip-full \
         git \
+        git-lfs \
         ssh \
         poppler-utils \
         curl && \
-    curl https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
-    apt-get --no-install-recommends install -y git-lfs && git lfs install && \
-    python3 -m pip install --no-cache-dir -U pip==20.0.1 setuptools>=49.1.0 && \
+    python3 -m pip install --no-cache-dir -U pip==20.0.1 setuptools==49.6.0 wheel==0.35.1 && \
     ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata && \
-    add-apt-repository --remove ppa:mc3man/gstffmpeg-keep -y && \
-    add-apt-repository --remove ppa:mc3man/xerus-media -y && \
     rm -rf /var/lib/apt/lists/* && \
     echo 'application/wasm wasm' >> /etc/mime.types
 
@@ -78,8 +73,6 @@ COPY components /tmp/components
 COPY cvat/requirements/ /tmp/requirements/
 COPY supervisord.conf mod_wsgi.conf wait-for-it.sh manage.py ${HOME}/
 RUN python3 -m pip install --no-cache-dir -r /tmp/requirements/${DJANGO_CONFIGURATION}.txt
-# pycocotools package is impossible to install with its dependencies by one pip install command
-RUN python3 -m pip install --no-cache-dir pycocotools==2.0.0
 
 ARG CLAM_AV
 ENV CLAM_AV=${CLAM_AV}
@@ -100,9 +93,6 @@ COPY cvat/ ${HOME}/cvat
 COPY cvat-core/ ${HOME}/cvat-core
 COPY cvat-data/ ${HOME}/cvat-data
 COPY tests ${HOME}/tests
-COPY datumaro/ ${HOME}/datumaro
-
-RUN python3 -m pip install --no-cache-dir -r ${HOME}/datumaro/requirements.txt
 
 RUN chown -R ${USER}:${USER} .
 

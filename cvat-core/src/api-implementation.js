@@ -81,8 +81,10 @@
 
         cvat.server.register.implementation = async (username, firstName, lastName,
             email, password1, password2, userConfirmations) => {
-            await serverProxy.server.register(username, firstName, lastName, email,
-                password1, password2, userConfirmations);
+            const user = await serverProxy.server.register(username, firstName,
+                lastName, email, password1, password2, userConfirmations);
+
+            return new User(user);
         };
 
         cvat.server.login.implementation = async (username, password) => {
@@ -93,8 +95,20 @@
             await serverProxy.server.logout();
         };
 
-        cvat.server.changePassword.implementation = async (oldPassword, newPassword1, newPassword2) => {
+        cvat.server.changePassword.implementation = async (
+            oldPassword, newPassword1, newPassword2,
+        ) => {
             await serverProxy.server.changePassword(oldPassword, newPassword1, newPassword2);
+        };
+
+        cvat.server.requestPasswordReset.implementation = async (email) => {
+            await serverProxy.server.requestPasswordReset(email);
+        };
+
+        cvat.server.resetPassword.implementation = async (
+            newPassword1, newPassword2, uid, token,
+        ) => {
+            await serverProxy.server.resetPassword(newPassword1, newPassword2, uid, token);
         };
 
         cvat.server.authorized.implementation = async () => {
@@ -211,6 +225,11 @@
             tasks.count = tasksData.count;
 
             return tasks;
+        };
+
+        cvat.server.installedApps.implementation = async () => {
+            const result = await serverProxy.server.installedApps();
+            return result;
         };
 
         return cvat;

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Row, Col } from 'antd/lib/grid';
 import Icon from 'antd/lib/icon';
 import Select, { OptionProps } from 'antd/lib/select';
@@ -10,7 +10,7 @@ import Dropdown from 'antd/lib/dropdown';
 import Text from 'antd/lib/typography/Text';
 import Tooltip from 'antd/lib/tooltip';
 
-import { ObjectType, ShapeType } from 'reducers/interfaces';
+import { ObjectType, ShapeType, ColorBy } from 'reducers/interfaces';
 import ItemMenu from './object-item-menu';
 
 interface Props {
@@ -20,14 +20,18 @@ interface Props {
     labels: any[];
     shapeType: ShapeType;
     objectType: ObjectType;
+    color: string;
+    colorBy: ColorBy;
     type: string;
     locked: boolean;
+    changeColorShortcut: string;
     copyShortcut: string;
     pasteShortcut: string;
     propagateShortcut: string;
     toBackgroundShortcut: string;
     toForegroundShortcut: string;
     removeShortcut: string;
+    changeColor(color: string): void;
     changeLabel(labelID: string): void;
     copy(): void;
     remove(): void;
@@ -37,6 +41,7 @@ interface Props {
     toBackground(): void;
     toForeground(): void;
     resetCuboidPerspective(): void;
+    activateTracking(): void;
 }
 
 function ItemTopComponent(props: Props): JSX.Element {
@@ -47,14 +52,18 @@ function ItemTopComponent(props: Props): JSX.Element {
         labels,
         shapeType,
         objectType,
+        color,
+        colorBy,
         type,
         locked,
+        changeColorShortcut,
         copyShortcut,
         pasteShortcut,
         propagateShortcut,
         toBackgroundShortcut,
         toForegroundShortcut,
         removeShortcut,
+        changeColor,
         changeLabel,
         copy,
         remove,
@@ -64,7 +73,23 @@ function ItemTopComponent(props: Props): JSX.Element {
         toBackground,
         toForeground,
         resetCuboidPerspective,
+        activateTracking,
     } = props;
+
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [colorPickerVisible, setColorPickerVisible] = useState(false);
+
+    const changeMenuVisible = (visible: boolean): void => {
+        if (!visible && colorPickerVisible) return;
+        setMenuVisible(visible);
+    };
+
+    const changeColorPickerVisible = (visible: boolean): void => {
+        if (!visible) {
+            setMenuVisible(false);
+        }
+        setColorPickerVisible(visible);
+    };
 
     return (
         <Row type='flex' align='middle'>
@@ -99,18 +124,25 @@ function ItemTopComponent(props: Props): JSX.Element {
             </Col>
             <Col span={2}>
                 <Dropdown
+                    visible={menuVisible}
+                    onVisibleChange={changeMenuVisible}
                     placement='bottomLeft'
                     overlay={ItemMenu({
                         serverID,
                         locked,
                         shapeType,
                         objectType,
+                        color,
+                        colorBy,
+                        colorPickerVisible,
+                        changeColorShortcut,
                         copyShortcut,
                         pasteShortcut,
                         propagateShortcut,
                         toBackgroundShortcut,
                         toForegroundShortcut,
                         removeShortcut,
+                        changeColor,
                         copy,
                         remove,
                         propagate,
@@ -119,6 +151,8 @@ function ItemTopComponent(props: Props): JSX.Element {
                         toBackground,
                         toForeground,
                         resetCuboidPerspective,
+                        changeColorPickerVisible,
+                        activateTracking,
                     })}
                 >
                     <Icon type='more' />
