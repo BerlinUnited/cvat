@@ -42,7 +42,7 @@ h5py==2.10.0
 django-cors-headers==3.5.0
 furl==2.1.0
 av==8.0.2 --no-binary=av
-#/tmp/requirements/tensorflow-1.15.3-cp36-cp36m-linux_x86_64.whl
+/tmp/requirements/tensorflow-2.3.1-cp38-cp38-linux_x86_64.whl
 #tensorflow==2.2.1 # Optional requirement of Datumaro
 # The package is used by pyunpack as a command line tool to support multiple
 # archives. Don't use as a python module because it has GPL license.
