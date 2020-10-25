@@ -1,32 +1,15 @@
-/*
-* Copyright (C) 2019-2020 Intel Corporation
-* SPDX-License-Identifier: MIT
-*/
-
-/* global
-    require:false
-*/
-
+// Copyright (C) 2019-2020 Intel Corporation
+//
+// SPDX-License-Identifier: MIT
 
 (() => {
     const ObjectState = require('./object-state');
+    const { checkObjectType } = require('./common');
     const {
-        checkObjectType,
-    } = require('./common');
-    const {
-        colors,
-        Source,
-        ObjectShape,
-        ObjectType,
-        AttributeType,
-        HistoryActions,
+        colors, Source, ObjectShape, ObjectType, AttributeType, HistoryActions,
     } = require('./enums');
 
-    const {
-        DataError,
-        ArgumentError,
-        ScriptingError,
-    } = require('./exceptions');
+    const { DataError, ArgumentError, ScriptingError } = require('./exceptions');
 
     const { Label } = require('./labels');
 
@@ -48,38 +31,26 @@
     function checkNumberOfPoints(shapeType, points) {
         if (shapeType === ObjectShape.RECTANGLE) {
             if (points.length / 2 !== 2) {
-                throw new DataError(
-                    `Rectangle must have 2 points, but got ${points.length / 2}`,
-                );
+                throw new DataError(`Rectangle must have 2 points, but got ${points.length / 2}`);
             }
         } else if (shapeType === ObjectShape.POLYGON) {
             if (points.length / 2 < 3) {
-                throw new DataError(
-                    `Polygon must have at least 3 points, but got ${points.length / 2}`,
-                );
+                throw new DataError(`Polygon must have at least 3 points, but got ${points.length / 2}`);
             }
         } else if (shapeType === ObjectShape.POLYLINE) {
             if (points.length / 2 < 2) {
-                throw new DataError(
-                    `Polyline must have at least 2 points, but got ${points.length / 2}`,
-                );
+                throw new DataError(`Polyline must have at least 2 points, but got ${points.length / 2}`);
             }
         } else if (shapeType === ObjectShape.POINTS) {
             if (points.length / 2 < 1) {
-                throw new DataError(
-                    `Points must have at least 1 points, but got ${points.length / 2}`,
-                );
+                throw new DataError(`Points must have at least 1 points, but got ${points.length / 2}`);
             }
         } else if (shapeType === ObjectShape.CUBOID) {
             if (points.length / 2 !== 8) {
-                throw new DataError(
-                    `Points must have exact 8 points, but got ${points.length / 2}`,
-                );
+                throw new DataError(`Points must have exact 8 points, but got ${points.length / 2}`);
             }
         } else {
-            throw new ArgumentError(
-                `Unknown value of shapeType has been recieved ${shapeType}`,
-            );
+            throw new ArgumentError(`Unknown value of shapeType has been recieved ${shapeType}`);
         }
     }
 
@@ -104,10 +75,7 @@
         }
 
         if (shapeType === ObjectShape.POLYLINE) {
-            const length = Math.max(
-                xmax - xmin,
-                ymax - ymin,
-            );
+            const length = Math.max(xmax - xmin, ymax - ymin);
 
             return length >= MIN_SHAPE_LENGTH;
         }
@@ -125,12 +93,11 @@
 
             checkObjectType('coordinate', x, 'number', null);
             checkObjectType('coordinate', y, 'number', null);
+			// NaoTH: we dont want the values clamped
             fittedPoints.push(x,y);
 
-            //fittedPoints.push(
-            //    Math.clamp(x, 0, maxX),
-            //    Math.clamp(y, 0, maxY),
-            //);
+
+            //fittedPoints.push(Math.clamp(x, 0, maxX), Math.clamp(y, 0, maxY));
         }
 
         return shapeType === ObjectShape.CUBOID ? points : fittedPoints;
@@ -150,15 +117,12 @@
         const { values } = attr;
         const type = attr.inputType;
 
-        if (typeof (value) !== 'string') {
-            throw new ArgumentError(
-                `Attribute value is expected to be string, but got ${typeof (value)}`,
-            );
+        if (typeof value !== 'string') {
+            throw new ArgumentError(`Attribute value is expected to be string, but got ${typeof value}`);
         }
 
         if (type === AttributeType.NUMBER) {
-            return +value >= +values[0]
-                && +value <= +values[1];
+            return +value >= +values[0] && +value <= +values[1];
         }
 
         if (type === AttributeType.CHECKBOX) {
@@ -191,25 +155,27 @@
                 attributeAccumulator[attr.spec_id] = attr.value;
                 return attributeAccumulator;
             }, {});
-            this.groupObject = Object.defineProperties({}, {
-                color: {
-                    get: () => {
-                        if (this.group) {
-                            return this.groupColors[this.group]
-                                || colors[this.group % colors.length];
-                        }
-                        return defaultGroupColor;
+            this.groupObject = Object.defineProperties(
+                {},
+                {
+                    color: {
+                        get: () => {
+                            if (this.group) {
+                                return this.groupColors[this.group] || colors[this.group % colors.length];
+                            }
+                            return defaultGroupColor;
+                        },
+                        set: (newColor) => {
+                            if (this.group && typeof newColor === 'string' && /^#[0-9A-F]{6}$/i.test(newColor)) {
+                                this.groupColors[this.group] = newColor;
+                            }
+                        },
                     },
-                    set: (newColor) => {
-                        if (this.group && typeof (newColor) === 'string' && /^#[0-9A-F]{6}$/i.test(newColor)) {
-                            this.groupColors[this.group] = newColor;
-                        }
+                    id: {
+                        get: () => this.group,
                     },
                 },
-                id: {
-                    get: () => this.group,
-                },
-            });
+            );
             this.appendDefaultAttributes(this.label);
 
             injection.groups.max = Math.max(injection.groups.max, this.group);
@@ -219,13 +185,19 @@
             const undoLock = this.lock;
             const redoLock = lock;
 
-            this.history.do(HistoryActions.CHANGED_LOCK, () => {
-                this.lock = undoLock;
-                this.updated = Date.now();
-            }, () => {
-                this.lock = redoLock;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_LOCK,
+                () => {
+                    this.lock = undoLock;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.lock = redoLock;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.lock = lock;
         }
@@ -234,13 +206,19 @@
             const undoColor = this.color;
             const redoColor = color;
 
-            this.history.do(HistoryActions.CHANGED_COLOR, () => {
-                this.color = undoColor;
-                this.updated = Date.now();
-            }, () => {
-                this.color = redoColor;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_COLOR,
+                () => {
+                    this.color = undoColor;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.color = redoColor;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.color = color;
         }
@@ -249,13 +227,19 @@
             const undoHidden = this.hidden;
             const redoHidden = hidden;
 
-            this.history.do(HistoryActions.CHANGED_HIDDEN, () => {
-                this.hidden = undoHidden;
-                this.updated = Date.now();
-            }, () => {
-                this.hidden = redoHidden;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_HIDDEN,
+                () => {
+                    this.hidden = undoHidden;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.hidden = redoHidden;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.hidden = hidden;
         }
@@ -269,15 +253,21 @@
             this.appendDefaultAttributes(label);
             const redoAttributes = { ...this.attributes };
 
-            this.history.do(HistoryActions.CHANGED_LABEL, () => {
-                this.label = undoLabel;
-                this.attributes = undoAttributes;
-                this.updated = Date.now();
-            }, () => {
-                this.label = redoLabel;
-                this.attributes = redoAttributes;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_LABEL,
+                () => {
+                    this.label = undoLabel;
+                    this.attributes = undoAttributes;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.label = redoLabel;
+                    this.attributes = redoAttributes;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
         }
 
         _saveAttributes(attributes, frame) {
@@ -289,13 +279,19 @@
 
             const redoAttributes = { ...this.attributes };
 
-            this.history.do(HistoryActions.CHANGED_ATTRIBUTES, () => {
-                this.attributes = undoAttributes;
-                this.updated = Date.now();
-            }, () => {
-                this.attributes = redoAttributes;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_ATTRIBUTES,
+                () => {
+                    this.attributes = undoAttributes;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.attributes = redoAttributes;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
         }
 
         _validateStateBeforeSave(frame, data, updated) {
@@ -305,11 +301,10 @@
                 checkObjectType('label', data.label, null, Label);
             }
 
-            const labelAttributes = data.label.attributes
-                .reduce((accumulator, value) => {
-                    accumulator[value.id] = value;
-                    return accumulator;
-                }, {});
+            const labelAttributes = data.label.attributes.reduce((accumulator, value) => {
+                accumulator[value.id] = value;
+                return accumulator;
+            }, {});
 
             if (updated.attributes) {
                 for (const attrID of Object.keys(data.attributes)) {
@@ -335,9 +330,7 @@
                 const { width, height } = this.frameMeta[frame];
                 fittedPoints = fitPoints(this.shapeType, data.points, width, height);
 
-                if ((!checkShapeArea(this.shapeType, fittedPoints))
-                    || checkOutside(fittedPoints, width, height)
-                ) {
+                if (!checkShapeArea(this.shapeType, fittedPoints) || checkOutside(fittedPoints, width, height)) {
                     fittedPoints = [];
                 }
             }
@@ -365,9 +358,7 @@
             if (updated.color) {
                 checkObjectType('color', data.color, 'string', null);
                 if (!/^#[0-9A-F]{6}$/i.test(data.color)) {
-                    throw new ArgumentError(
-                        `Got invalid color value: "${data.color}"`,
-                    );
+                    throw new ArgumentError(`Got invalid color value: "${data.color}"`);
                 }
             }
 
@@ -397,9 +388,16 @@
         }
 
         updateTimestamp(updated) {
-            const anyChanges = updated.label || updated.attributes || updated.points
-                || updated.outside || updated.occluded || updated.keyframe
-                || updated.zOrder || updated.hidden || updated.lock || updated.pinned;
+            const anyChanges = updated.label
+                || updated.attributes
+                || updated.points
+                || updated.outside
+                || updated.occluded
+                || updated.keyframe
+                || updated.zOrder
+                || updated.hidden
+                || updated.lock
+                || updated.pinned;
 
             if (anyChanges) {
                 this.updated = Date.now();
@@ -410,14 +408,20 @@
             if (!this.lock || force) {
                 this.removed = true;
 
-                this.history.do(HistoryActions.REMOVED_OBJECT, () => {
-                    this.serverID = undefined;
-                    this.removed = false;
-                    this.updated = Date.now();
-                }, () => {
-                    this.removed = true;
-                    this.updated = Date.now();
-                }, [this.clientID], frame);
+                this.history.do(
+                    HistoryActions.REMOVED_OBJECT,
+                    () => {
+                        this.serverID = undefined;
+                        this.removed = false;
+                        this.updated = Date.now();
+                    },
+                    () => {
+                        this.removed = true;
+                        this.updated = Date.now();
+                    },
+                    [this.clientID],
+                    frame,
+                );
             }
 
             return this.removed;
@@ -437,33 +441,33 @@
             const undoPinned = this.pinned;
             const redoPinned = pinned;
 
-            this.history.do(HistoryActions.CHANGED_PINNED, () => {
-                this.pinned = undoPinned;
-                this.updated = Date.now();
-            }, () => {
-                this.pinned = redoPinned;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_PINNED,
+                () => {
+                    this.pinned = undoPinned;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.pinned = redoPinned;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.pinned = pinned;
         }
 
         save() {
-            throw new ScriptingError(
-                'Is not implemented',
-            );
+            throw new ScriptingError('Is not implemented');
         }
 
         get() {
-            throw new ScriptingError(
-                'Is not implemented',
-            );
+            throw new ScriptingError('Is not implemented');
         }
 
         toJSON() {
-            throw new ScriptingError(
-                'Is not implemented',
-            );
+            throw new ScriptingError('Is not implemented');
         }
     }
 
@@ -502,9 +506,7 @@
         // Method is used to construct ObjectState objects
         get(frame) {
             if (frame !== this.frame) {
-                throw new ScriptingError(
-                    'Got frame is not equal to the frame of the shape',
-                );
+                throw new ScriptingError('Got frame is not equal to the frame of the shape');
             }
 
             return {
@@ -534,15 +536,21 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
 
-            this.history.do(HistoryActions.CHANGED_POINTS, () => {
-                this.points = undoPoints;
-                this.source = undoSource;
-                this.updated = Date.now();
-            }, () => {
-                this.points = redoPoints;
-                this.source = redoSource;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_POINTS,
+                () => {
+                    this.points = undoPoints;
+                    this.source = undoSource;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.points = redoPoints;
+                    this.source = redoSource;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.source = Source.MANUAL;
             this.points = points;
@@ -554,15 +562,21 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
 
-            this.history.do(HistoryActions.CHANGED_OCCLUDED, () => {
-                this.occluded = undoOccluded;
-                this.source = undoSource;
-                this.updated = Date.now();
-            }, () => {
-                this.occluded = redoOccluded;
-                this.source = redoSource;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_OCCLUDED,
+                () => {
+                    this.occluded = undoOccluded;
+                    this.source = undoSource;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.occluded = redoOccluded;
+                    this.source = redoSource;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.source = Source.MANUAL;
             this.occluded = occluded;
@@ -574,15 +588,21 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
 
-            this.history.do(HistoryActions.CHANGED_ZORDER, () => {
-                this.zOrder = undoZOrder;
-                this.source = undoSource;
-                this.updated = Date.now();
-            }, () => {
-                this.zOrder = redoZOrder;
-                this.source = redoSource;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_ZORDER,
+                () => {
+                    this.zOrder = undoZOrder;
+                    this.source = undoSource;
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.zOrder = redoZOrder;
+                    this.source = redoSource;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
 
             this.source = Source.MANUAL;
             this.zOrder = zOrder;
@@ -590,9 +610,7 @@
 
         save(frame, data) {
             if (frame !== this.frame) {
-                throw new ScriptingError(
-                    'Got frame is not equal to the frame of the shape',
-                );
+                throw new ScriptingError('Got frame is not equal to the frame of the shape');
             }
 
             if (this.lock && data.lock) {
@@ -697,8 +715,8 @@
                         z_order: this.shapes[frame].zOrder,
                         points: [...this.shapes[frame].points],
                         outside: this.shapes[frame].outside,
-                        attributes: Object.keys(this.shapes[frame].attributes)
-                            .reduce((attributeAccumulator, attrId) => {
+                        attributes: Object.keys(this.shapes[frame].attributes).reduce(
+                            (attributeAccumulator, attrId) => {
                                 if (labelAttributes[attrId].mutable) {
                                     attributeAccumulator.push({
                                         spec_id: attrId,
@@ -707,7 +725,9 @@
                                 }
 
                                 return attributeAccumulator;
-                            }, []),
+                            },
+                            [],
+                        ),
                         id: this.shapes[frame].serverID,
                         frame: +frame,
                     });
@@ -720,10 +740,7 @@
         // Method is used to construct ObjectState objects
         get(frame) {
             const {
-                prev,
-                next,
-                first,
-                last,
+                prev, next, first, last,
             } = this.boundedKeyframes(frame);
 
             return {
@@ -839,30 +856,35 @@
                 })),
             };
 
-            this.history.do(HistoryActions.CHANGED_LABEL, () => {
-                this.label = undoLabel;
-                this.attributes = undoAttributes.unmutable;
-                for (const mutable of undoAttributes.mutable) {
-                    this.shapes[mutable.frame].attributes = mutable.attributes;
-                }
-                this.updated = Date.now();
-            }, () => {
-                this.label = redoLabel;
-                this.attributes = redoAttributes.unmutable;
-                for (const mutable of redoAttributes.mutable) {
-                    this.shapes[mutable.frame].attributes = mutable.attributes;
-                }
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_LABEL,
+                () => {
+                    this.label = undoLabel;
+                    this.attributes = undoAttributes.unmutable;
+                    for (const mutable of undoAttributes.mutable) {
+                        this.shapes[mutable.frame].attributes = mutable.attributes;
+                    }
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.label = redoLabel;
+                    this.attributes = redoAttributes.unmutable;
+                    for (const mutable of redoAttributes.mutable) {
+                        this.shapes[mutable.frame].attributes = mutable.attributes;
+                    }
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
         }
 
         _saveAttributes(attributes, frame) {
             const current = this.get(frame);
-            const labelAttributes = this.label.attributes
-                .reduce((accumulator, value) => {
-                    accumulator[value.id] = value;
-                    return accumulator;
-                }, {});
+            const labelAttributes = this.label.attributes.reduce((accumulator, value) => {
+                accumulator[value.id] = value;
+                return accumulator;
+            }, {});
 
             const wasKeyframe = frame in this.shapes;
             const undoAttributes = this.attributes;
@@ -880,7 +902,7 @@
                         // keyframe, but without this attrID
                         || !(attrID in this.shapes[frame].attributes)
                         // keyframe with attrID, but with another value
-                        || (this.shapes[frame].attributes[attrID] !== attributes[attrID]);
+                        || this.shapes[frame].attributes[attrID] !== attributes[attrID];
                 }
             }
             let redoShape;
@@ -905,8 +927,7 @@
             }
 
             for (const attrID of Object.keys(attributes)) {
-                if (labelAttributes[attrID].mutable
-                    && attributes[attrID] !== current.attributes[attrID]) {
+                if (labelAttributes[attrID].mutable && attributes[attrID] !== current.attributes[attrID]) {
                     redoShape.attributes[attrID] = attributes[attrID];
                 }
             }
@@ -916,43 +937,53 @@
                 this.shapes[frame] = redoShape;
             }
 
-            this.history.do(HistoryActions.CHANGED_ATTRIBUTES, () => {
-                this.attributes = undoAttributes;
-                if (undoShape) {
-                    this.shapes[frame] = undoShape;
-                } else if (redoShape) {
-                    delete this.shapes[frame];
-                }
-                this.updated = Date.now();
-            }, () => {
-                this.attributes = redoAttributes;
-                if (redoShape) {
-                    this.shapes[frame] = redoShape;
-                }
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+            this.history.do(
+                HistoryActions.CHANGED_ATTRIBUTES,
+                () => {
+                    this.attributes = undoAttributes;
+                    if (undoShape) {
+                        this.shapes[frame] = undoShape;
+                    } else if (redoShape) {
+                        delete this.shapes[frame];
+                    }
+                    this.updated = Date.now();
+                },
+                () => {
+                    this.attributes = redoAttributes;
+                    if (redoShape) {
+                        this.shapes[frame] = redoShape;
+                    }
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
         }
 
-        _appendShapeActionToHistory(
-            actionType, frame, undoShape, redoShape, undoSource, redoSource,
-        ) {
-            this.history.do(actionType, () => {
-                if (!undoShape) {
-                    delete this.shapes[frame];
-                } else {
-                    this.shapes[frame] = undoShape;
-                }
-                this.source = undoSource;
-                this.updated = Date.now();
-            }, () => {
-                if (!redoShape) {
-                    delete this.shapes[frame];
-                } else {
-                    this.shapes[frame] = redoShape;
-                }
-                this.source = redoSource;
-                this.updated = Date.now();
-            }, [this.clientID], frame);
+        _appendShapeActionToHistory(actionType, frame, undoShape, redoShape, undoSource, redoSource) {
+            this.history.do(
+                actionType,
+                () => {
+                    if (!undoShape) {
+                        delete this.shapes[frame];
+                    } else {
+                        this.shapes[frame] = undoShape;
+                    }
+                    this.source = undoSource;
+                    this.updated = Date.now();
+                },
+                () => {
+                    if (!redoShape) {
+                        delete this.shapes[frame];
+                    } else {
+                        this.shapes[frame] = redoShape;
+                    }
+                    this.source = redoSource;
+                    this.updated = Date.now();
+                },
+                [this.clientID],
+                frame,
+            );
         }
 
         _savePoints(points, frame) {
@@ -961,14 +992,16 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
             const undoShape = wasKeyframe ? this.shapes[frame] : undefined;
-            const redoShape = wasKeyframe ? { ...this.shapes[frame], points } : {
-                frame,
-                points,
-                zOrder: current.zOrder,
-                outside: current.outside,
-                occluded: current.occluded,
-                attributes: {},
-            };
+            const redoShape = wasKeyframe
+                ? { ...this.shapes[frame], points }
+                : {
+                    frame,
+                    points,
+                    zOrder: current.zOrder,
+                    outside: current.outside,
+                    occluded: current.occluded,
+                    attributes: {},
+                };
 
             this.shapes[frame] = redoShape;
             this.source = Source.MANUAL;
@@ -988,14 +1021,16 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
             const undoShape = wasKeyframe ? this.shapes[frame] : undefined;
-            const redoShape = wasKeyframe ? { ...this.shapes[frame], outside } : {
-                frame,
-                outside,
-                zOrder: current.zOrder,
-                points: current.points,
-                occluded: current.occluded,
-                attributes: {},
-            };
+            const redoShape = wasKeyframe
+                ? { ...this.shapes[frame], outside }
+                : {
+                    frame,
+                    outside,
+                    zOrder: current.zOrder,
+                    points: current.points,
+                    occluded: current.occluded,
+                    attributes: {},
+                };
 
             this.shapes[frame] = redoShape;
             this.source = Source.MANUAL;
@@ -1015,14 +1050,16 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
             const undoShape = wasKeyframe ? this.shapes[frame] : undefined;
-            const redoShape = wasKeyframe ? { ...this.shapes[frame], occluded } : {
-                frame,
-                occluded,
-                zOrder: current.zOrder,
-                points: current.points,
-                outside: current.outside,
-                attributes: {},
-            };
+            const redoShape = wasKeyframe
+                ? { ...this.shapes[frame], occluded }
+                : {
+                    frame,
+                    occluded,
+                    zOrder: current.zOrder,
+                    points: current.points,
+                    outside: current.outside,
+                    attributes: {},
+                };
 
             this.shapes[frame] = redoShape;
             this.source = Source.MANUAL;
@@ -1042,14 +1079,16 @@
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
             const undoShape = wasKeyframe ? this.shapes[frame] : undefined;
-            const redoShape = wasKeyframe ? { ...this.shapes[frame], zOrder } : {
-                frame,
-                zOrder,
-                occluded: current.occluded,
-                points: current.points,
-                outside: current.outside,
-                attributes: {},
-            };
+            const redoShape = wasKeyframe
+                ? { ...this.shapes[frame], zOrder }
+                : {
+                    frame,
+                    zOrder,
+                    occluded: current.occluded,
+                    points: current.points,
+                    outside: current.outside,
+                    attributes: {},
+                };
 
             this.shapes[frame] = redoShape;
             this.source = Source.MANUAL;
@@ -1067,23 +1106,24 @@
             const current = this.get(frame);
             const wasKeyframe = frame in this.shapes;
 
-            if ((keyframe && wasKeyframe)
-                || (!keyframe && !wasKeyframe)) {
+            if ((keyframe && wasKeyframe) || (!keyframe && !wasKeyframe)) {
                 return;
             }
 
             const undoSource = this.source;
             const redoSource = Source.MANUAL;
             const undoShape = wasKeyframe ? this.shapes[frame] : undefined;
-            const redoShape = keyframe ? {
-                frame,
-                zOrder: current.zOrder,
-                points: current.points,
-                outside: current.outside,
-                occluded: current.occluded,
-                attributes: {},
-                source: current.source,
-            } : undefined;
+            const redoShape = keyframe
+                ? {
+                    frame,
+                    zOrder: current.zOrder,
+                    points: current.points,
+                    outside: current.outside,
+                    occluded: current.occluded,
+                    attributes: {},
+                    source: current.source,
+                }
+                : undefined;
 
             this.source = Source.MANUAL;
             if (redoShape) {
@@ -1198,7 +1238,7 @@
 
             throw new DataError(
                 'No one left position or right position was found. '
-                + `Interpolation impossible. Client ID: ${this.clientID}`,
+                    + `Interpolation impossible. Client ID: ${this.clientID}`,
             );
         }
     }
@@ -1231,9 +1271,7 @@
         // Method is used to construct ObjectState objects
         get(frame) {
             if (frame !== this.frame) {
-                throw new ScriptingError(
-                    'Got frame is not equal to the frame of the shape',
-                );
+                throw new ScriptingError('Got frame is not equal to the frame of the shape');
             }
 
             return {
@@ -1253,9 +1291,7 @@
 
         save(frame, data) {
             if (frame !== this.frame) {
-                throw new ScriptingError(
-                    'Got frame is not equal to the frame of the tag',
-                );
+                throw new ScriptingError('Got frame is not equal to the frame of the tag');
             }
 
             if (this.lock && data.lock) {
@@ -1325,7 +1361,7 @@
 
         static distance(points, x, y) {
             function position(x1, y1, x2, y2) {
-                return ((x2 - x1) * (y - y1) - (x - x1) * (y2 - y1));
+                return (x2 - x1) * (y - y1) - (x - x1) * (y2 - y1);
             }
 
             let wn = 0;
@@ -1357,8 +1393,8 @@
 
                 // Find the shortest distance from point to an edge
                 // Get an equation of a line in general
-                const aCoef = (y1 - y2);
-                const bCoef = (x2 - x1);
+                const aCoef = y1 - y2;
+                const bCoef = x2 - x1;
 
                 // Vector (aCoef, bCoef) is a perpendicular to line
                 // Now find the point where two lines
@@ -1366,13 +1402,9 @@
                 const xCross = x - aCoef;
                 const yCross = y - bCoef;
 
-                if (((xCross - x1) * (x2 - xCross)) >= 0
-                    && ((yCross - y1) * (y2 - yCross)) >= 0) {
+                if ((xCross - x1) * (x2 - xCross) >= 0 && (yCross - y1) * (y2 - yCross) >= 0) {
                     // Cross point is on segment between p1(x1,y1) and p2(x2,y2)
-                    distances.push(Math.sqrt(
-                        Math.pow(x - xCross, 2)
-                        + Math.pow(y - yCross, 2),
-                    ));
+                    distances.push(Math.sqrt(Math.pow(x - xCross, 2) + Math.pow(y - yCross, 2)));
                 } else {
                     distances.push(
                         Math.min(
@@ -1410,12 +1442,12 @@
                 const y2 = points[i + 3];
 
                 // Find the shortest distance from point to an edge
-                if (((x - x1) * (x2 - x)) >= 0 && ((y - y1) * (y2 - y)) >= 0) {
+                if ((x - x1) * (x2 - x) >= 0 && (y - y1) * (y2 - y) >= 0) {
                     // Find the length of a perpendicular
                     // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
                     distances.push(
-                        Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math
-                            .sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2)),
+                        Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1)
+                            / Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2)),
                     );
                 } else {
                     // The link below works for lines (which have infinit length)
@@ -1448,9 +1480,7 @@
                 const x1 = points[i];
                 const y1 = points[i + 1];
 
-                distances.push(
-                    Math.sqrt(Math.pow(x1 - x, 2) + Math.pow(y1 - y, 2)),
-                );
+                distances.push(Math.sqrt(Math.pow(x1 - x, 2) + Math.pow(y1 - y, 2)));
             }
 
             return Math.min.apply(null, distances);
@@ -1500,11 +1530,12 @@
                 }
                 lowerHull.pop();
 
-                if (upperHull.length
-                    === 1 && lowerHull.length
-                    === 1 && upperHull[0].x
-                    === lowerHull[0].x && upperHull[0].y
-                    === lowerHull[0].y) return upperHull;
+                if (
+                    upperHull.length === 1
+                    && lowerHull.length === 1
+                    && upperHull[0].x === lowerHull[0].x
+                    && upperHull[0].y === lowerHull[0].y
+                ) return upperHull;
                 return upperHull.concat(lowerHull);
             }
 
@@ -1523,7 +1554,7 @@
 
         static contain(points, x, y) {
             function isLeft(P0, P1, P2) {
-                return ((P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y));
+                return (P1.x - P0.x) * (P2.y - P0.y) - (P2.x - P0.x) * (P1.y - P0.y);
             }
             points = CuboidShape.makeHull(points);
             let wn = 0;
@@ -1562,15 +1593,14 @@
                 const p2 = points[i + 1] || points[0];
 
                 // perpendicular from point to straight length
-                const distance = (Math.abs((p2.y - p1.y) * x
-                    - (p2.x - p1.x) * y + p2.x * p1.y - p2.y * p1.x))
+                const distance = Math.abs((p2.y - p1.y) * x - (p2.x - p1.x) * y + p2.x * p1.y - p2.y * p1.x)
                     / Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
 
                 // check if perpendicular belongs to the straight segment
                 const a = Math.pow(p1.x - x, 2) + Math.pow(p1.y - y, 2);
                 const b = Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
                 const c = Math.pow(p2.x - x, 2) + Math.pow(p2.y - y, 2);
-                if (distance < minDistance && (a + b - c) >= 0 && (c + b - a) >= 0) {
+                if (distance < minDistance && a + b - c >= 0 && c + b - a >= 0) {
                     minDistance = distance;
                 }
             }
@@ -1589,14 +1619,10 @@
         }
 
         interpolatePosition(leftPosition, rightPosition, offset) {
-            const positionOffset = leftPosition.points.map((point, index) => (
-                rightPosition.points[index] - point
-            ));
+            const positionOffset = leftPosition.points.map((point, index) => rightPosition.points[index] - point);
 
             return {
-                points: leftPosition.points.map((point, index) => (
-                    point + positionOffset[index] * offset
-                )),
+                points: leftPosition.points.map((point, index) => point + positionOffset[index] * offset),
                 occluded: leftPosition.occluded,
                 outside: leftPosition.outside,
                 zOrder: leftPosition.zOrder,
@@ -1684,7 +1710,8 @@
 
             function matchRightLeft(leftCurve, rightCurve, leftRightMatching) {
                 const matchedRightPoints = Object.values(leftRightMatching).flat();
-                const unmatchedRightPoints = rightCurve.map((_, index) => index)
+                const unmatchedRightPoints = rightCurve
+                    .map((_, index) => index)
                     .filter((index) => !matchedRightPoints.includes(index));
                 const updatedMatching = { ...leftRightMatching };
 
@@ -1694,8 +1721,7 @@
                 }
 
                 for (const key of Object.keys(updatedMatching)) {
-                    const sortedRightIndexes = updatedMatching[key]
-                        .sort((a, b) => a - b);
+                    const sortedRightIndexes = updatedMatching[key].sort((a, b) => a - b);
                     updatedMatching[key] = sortedRightIndexes;
                 }
 
@@ -1718,9 +1744,7 @@
                 }
 
                 function computeDistance(point1, point2) {
-                    return Math.sqrt(
-                        ((point1.x - point2.x) ** 2) + ((point1.y - point2.y) ** 2),
-                    );
+                    return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
                 }
 
                 function minimizeSegment(baseLength, N, startInterpolated, stopInterpolated) {
@@ -1728,9 +1752,7 @@
                     const minimized = [interpolatedPoints[startInterpolated]];
                     let latestPushed = startInterpolated;
                     for (let i = startInterpolated + 1; i < stopInterpolated; i++) {
-                        const distance = computeDistance(
-                            interpolatedPoints[latestPushed], interpolatedPoints[i],
-                        );
+                        const distance = computeDistance(interpolatedPoints[latestPushed], interpolatedPoints[i]);
 
                         if (distance >= threshold) {
                             minimized.push(interpolatedPoints[i]);
@@ -1774,9 +1796,7 @@
                     const baseLength = curveLength(leftPoints.slice(start, stop + 1));
                     const N = stop - start + 1;
 
-                    reduced.push(
-                        ...minimizeSegment(baseLength, N, startInterpolated, stopInterpolated),
-                    );
+                    reduced.push(...minimizeSegment(baseLength, N, startInterpolated, stopInterpolated));
                 }
 
                 function rightSegment(leftPoint) {
@@ -1787,9 +1807,7 @@
                     const baseLength = curveLength(rightPoints.slice(start, stop + 1));
                     const N = stop - start + 1;
 
-                    reduced.push(
-                        ...minimizeSegment(baseLength, N, startInterpolated, stopInterpolated),
-                    );
+                    reduced.push(...minimizeSegment(baseLength, N, startInterpolated, stopInterpolated));
                 }
 
                 let previousOpened = null;
@@ -1845,12 +1863,11 @@
             const rightOffsetVec = curveToOffsetVec(rightPoints, curveLength(rightPoints));
 
             const matching = matchLeftRight(leftOffsetVec, rightOffsetVec);
-            const completedMatching = matchRightLeft(
-                leftOffsetVec, rightOffsetVec, matching,
-            );
+            const completedMatching = matchRightLeft(leftOffsetVec, rightOffsetVec, matching);
 
             const interpolatedPoints = Object.keys(completedMatching)
-                .map((leftPointIdx) => +leftPointIdx).sort((a, b) => a - b)
+                .map((leftPointIdx) => +leftPointIdx)
+                .sort((a, b) => a - b)
                 .reduce((acc, leftPointIdx) => {
                     const leftPoint = leftPoints[leftPointIdx];
                     for (const rightPointIdx of completedMatching[leftPointIdx]) {
@@ -1864,12 +1881,7 @@
                     return acc;
                 }, []);
 
-            const reducedPoints = reduceInterpolation(
-                interpolatedPoints,
-                completedMatching,
-                leftPoints,
-                rightPoints,
-            );
+            const reducedPoints = reduceInterpolation(interpolatedPoints, completedMatching, leftPoints, rightPoints);
 
             return {
                 points: toArray(reducedPoints),
@@ -1900,8 +1912,7 @@
                 points: [...rightPosition.points, rightPosition.points[0], rightPosition.points[1]],
             };
 
-            const result = PolyTrack.prototype.interpolatePosition
-                .call(this, copyLeft, copyRight, offset);
+            const result = PolyTrack.prototype.interpolatePosition.call(this, copyLeft, copyRight, offset);
 
             return {
                 ...result,
@@ -1962,14 +1973,10 @@
         }
 
         interpolatePosition(leftPosition, rightPosition, offset) {
-            const positionOffset = leftPosition.points.map((point, index) => (
-                rightPosition.points[index] - point
-            ));
+            const positionOffset = leftPosition.points.map((point, index) => rightPosition.points[index] - point);
 
             return {
-                points: leftPosition.points.map((point, index) => (
-                    point + positionOffset[index] * offset
-                )),
+                points: leftPosition.points.map((point, index) => point + positionOffset[index] * offset),
                 occluded: leftPosition.occluded,
                 outside: leftPosition.outside,
                 zOrder: leftPosition.zOrder,
