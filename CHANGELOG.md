@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Manual review pipeline: issues/comments/workspace (<https://github.com/openvinotoolkit/cvat/pull/2357>)
 - Added basic projects implementation (<https://github.com/openvinotoolkit/cvat/pull/2255>)
 
 ### Changed
@@ -33,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exception: "Value must be a user instance" (<https://github.com/openvinotoolkit/cvat/pull/2441>)
 - Reset zoom option doesn't work in tag annotation mode (<https://github.com/openvinotoolkit/cvat/pull/2443>)
 - Canvas is busy error (<https://github.com/openvinotoolkit/cvat/pull/2437>)
+- Projects view layout fix (<https://github.com/openvinotoolkit/cvat/pull/2503>)
+- Fixed the tasks view (infinite loading) when it is impossible to get a preview of the task (<https://github.com/openvinotoolkit/cvat/pull/2504>)
+- Empty frames navigation (<https://github.com/openvinotoolkit/cvat/pull/2505>)
 
 ### Security
 
@@ -63,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MOTS png mask format support (<https://github.com/openvinotoolkit/cvat/pull/2198>)
 - Ability to correct upload video with a rotation record in the metadata (<https://github.com/openvinotoolkit/cvat/pull/2218>)
 - User search field for assignee fields (<https://github.com/openvinotoolkit/cvat/pull/2370>)
+- Support of mxf videos (<https://github.com/openvinotoolkit/cvat/pull/2514>)
 
 ### Changed
 
