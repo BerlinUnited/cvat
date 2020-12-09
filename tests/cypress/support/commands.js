@@ -23,6 +23,7 @@ Cypress.Commands.add('logout', (username = Cypress.env('user')) => {
     });
     cy.get('.anticon-logout').click();
     cy.url().should('include', '/auth/login');
+    cy.visit('/auth/login'); // clear query parameter "next"
 });
 
 Cypress.Commands.add('userRegistration', (firstName, lastName, userName, emailAddr, password) => {
@@ -489,6 +490,12 @@ Cypress.Commands.add('writeFilterValue', (clear, filterValue) => {
         .within(() => {
             cy.get('.ant-select-selection__choice__content').should('have.text', filterValue);
         });
+});
+
+Cypress.Commands.add('goCheckFrameNumber', (frameNum) => {
+    cy.get('.cvat-player-frame-selector').within(() => {
+        cy.get('input[role="spinbutton"]').clear().type(`${frameNum}{Enter}`).should('have.value', frameNum);
+    });
 });
 
 Cypress.Commands.add('checkFrameNum', (frameNum) => {
