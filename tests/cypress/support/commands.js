@@ -420,6 +420,10 @@ Cypress.Commands.add('updateAttributes', (multiAttrParams) => {
                     cy.get(`.ant-select-item-option[title="${multiAttrParams.additionalValue}"]`).click();
                 });
         }
+        if (multiAttrParams.mutable) {
+            cy.get('.cvat-attribute-mutable-checkbox')
+                .find('[type="checkbox"]').should('not.be.checked').check().should('be.checked');
+        }
     });
 });
 
@@ -541,7 +545,7 @@ Cypress.Commands.add('addNewLabel', (newLabelName, additionalAttrs, labelColor) 
 Cypress.Commands.add('addNewLabelViaContinueButton', (additionalLabels) => {
     cy.collectLabelsName().then((labelsNames) => {
         if (additionalLabels.some((el) => labelsNames.indexOf(el) === -1)) {
-            cy.contains('button', 'Add label').click();
+            cy.get('.cvat-constructor-viewer-new-item').click();
             for (let j = 0; j < additionalLabels.length; j++) {
                 cy.get('[placeholder="Label name"]').type(additionalLabels[j]);
                 if (j !== additionalLabels.length - 1) {
