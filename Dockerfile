@@ -151,7 +151,7 @@ COPY --chown=${USER} tests/ ${HOME}/tests
 USER ${USER}
 WORKDIR ${HOME}
 
-RUN mkdir data share media keys logs /tmp/supervisord share/benji share/repl
+RUN mkdir data share media keys logs /tmp/supervisord share/benji share/repl share/devils
 RUN python3 manage.py collectstatic
 
 EXPOSE 8080
