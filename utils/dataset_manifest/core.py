@@ -145,8 +145,9 @@ class VideoStreamReader:
 
 
 class DatasetImagesReader:
-    def __init__(self, sources, is_sorted=True, use_image_hash=False, *args, **kwargs):
+    def __init__(self, sources, meta=None, is_sorted=True, use_image_hash=False, *args, **kwargs):
         self._sources = sources if is_sorted else sorted(sources)
+        self._meta = meta
         self._content = []
         self._data_dir = kwargs.get('data_dir', None)
         self._use_image_hash = use_image_hash
@@ -163,6 +164,8 @@ class DatasetImagesReader:
                 'width': img.width,
                 'height': img.height,
             }
+            if self._meta and img_name in self._meta:
+                image_properties['meta'] = self._meta[img_name]
             if self._use_image_hash:
                 image_properties['checksum'] = md5_hash(img)
             yield image_properties
@@ -177,7 +180,7 @@ class DatasetImagesReader:
 
 class _Manifest:
     FILE_NAME = 'manifest.jsonl'
-    VERSION = '1.0'
+    VERSION = '1.1'
 
     def __init__(self, path, is_created=False):
         assert path, 'A path to manifest file not found'
@@ -325,7 +328,7 @@ class _ManifestManager(ABC):
         return self._index
 
 class VideoManifestManager(_ManifestManager):
-    def __init__(self, manifest_path, *args, **kwargs):
+    def __init__(self, manifest_path):
         super().__init__(manifest_path)
         setattr(self._manifest, 'TYPE', 'video')
         self.BASE_INFORMATION['properties'] = 3
@@ -381,9 +384,15 @@ class ManifestValidator:
             assert self._manifest.TYPE != json.loads(manifest_file.readline())['type']
 
 class VideoManifestValidator(VideoManifestManager):
-    def __init__(self, **kwargs):
-        self.source_path = kwargs.pop('source_path')
-        super().__init__(self, **kwargs)
+    def __init__(self, source_path, manifest_path):
+        self.source_path = source_path
+        super().__init__(manifest_path)
+
+    @staticmethod
+    def _get_video_stream(container):
+        video_stream = next(stream for stream in container.streams if stream.type == 'video')
+        video_stream.thread_type = 'AUTO'
+        return video_stream
 
     def validate_key_frame(self, container, video_stream, key_frame):
         for packet in container.demux(video_stream):

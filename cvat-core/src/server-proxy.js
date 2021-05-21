@@ -756,11 +756,7 @@
                         },
                     );
                 } catch (errorData) {
-                    const code = errorData.response ? errorData.response.status : errorData.code;
-                    throw new ServerError(
-                        `Could not get Image Context of the frame for the task ${tid} from the server`,
-                        code,
-                    );
+                    throw generateError(errorData);
                 }
 
                 return response.data;
@@ -1086,7 +1082,9 @@
 
                     const closureId = Date.now();
                     predictAnnotations.latestRequest.id = closureId;
-                    const predicate = () => !predictAnnotations.latestRequest.fetching || predictAnnotations.latestRequest.id !== closureId;
+                    const predicate = () => (
+                        !predictAnnotations.latestRequest.fetching || predictAnnotations.latestRequest.id !== closureId
+                    );
                     if (predictAnnotations.latestRequest.fetching) {
                         waitFor(5, predicate).then(() => {
                             if (predictAnnotations.latestRequest.id !== closureId) {
