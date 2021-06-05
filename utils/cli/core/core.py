@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Intel Corporation
+# Copyright (C) 2020-2021 Intel Corporation
 #
 # SPDX-License-Identifier: MIT
 
@@ -23,7 +23,7 @@ class CLI():
         self.session = session
         self.login(credentials)
 
-    def tasks_data(self, task_id, resource_type, resources):
+    def tasks_data(self, task_id, resource_type, resources, **kwargs):
         """ Add local, remote, or shared files to an existing task. """
         url = self.api.tasks_id_data(task_id)
         data = {}
@@ -35,6 +35,13 @@ class CLI():
         elif resource_type == ResourceType.SHARE:
             data = {'server_files[{}]'.format(i): f for i, f in enumerate(resources)}
         data['image_quality'] = 50
+
+        ## capture additional kwargs
+        if 'image_quality' in kwargs:
+            data['image_quality'] = kwargs.get('image_quality')
+        if 'frame_step' in kwargs:
+            data['frame_filter'] = f"step={kwargs.get('frame_step')}"
+
         response = self.session.post(url, data=data, files=files)
         response.raise_for_status()
 
@@ -85,7 +92,7 @@ class CLI():
         response_json = response.json()
         log.info('Created task ID: {id} NAME: {name}'.format(**response_json))
         task_id = response_json['id']
-        self.tasks_data(task_id, resource_type, resources)
+        self.tasks_data(task_id, resource_type, resources, **kwargs)
 
         if annotation_path != '':
             url = self.api.tasks_id_status(task_id)
@@ -117,14 +124,16 @@ class CLI():
             check_url = self.api.git_check(rq_id)
             response = self.session.get(check_url)
             response_json = response.json()
-            log.info('''Awaiting dataset repository for task. Status: {}'''.format(
-                    response_json['status']))
             while response_json['status'] != 'finished':
+                log.info('''Awaiting a dataset repository to be created for the task. Response status: {}'''.format(
+                    response_json['status']))
                 sleep(git_completion_verification_period)
                 response = self.session.get(check_url)
                 response_json = response.json()
-                if response_json['status'] == 'Failed':
-                    log.error(f'Dataset repository creation request for task {task_id} failed.')
+                if response_json['status'] == 'failed' or response_json['status'] == 'unknown':
+                    log.error(f'Dataset repository creation request for task {task_id} failed'
+                              f'with status {response_json["status"]}.')
+                    break
 
             log.info(f"Dataset repository creation completed with status: {response_json['status']}.")
 
